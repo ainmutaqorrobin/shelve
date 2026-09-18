@@ -1,0 +1,12 @@
+.git
+node_modules
+**/node_modules
+**/.nuxt
+**/.output
+**/.vercel
+**/dist
+**/.turbo
+**/.env
+**/.env.*
+!**/.env.example
+deploy
