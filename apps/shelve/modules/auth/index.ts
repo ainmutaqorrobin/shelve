@@ -88,6 +88,18 @@ export default defineNuxtModule({
       const isNonVercelCI = process.env.CI && !process.env.VERCEL
       if (isNonVercelCI || skipValidation) {
         console.log('Non-Vercel CI environment detected or SKIP_ENV_VALIDATION is set. Skipping environment variable validation.')
+        // appConfig is baked into the client bundle at build time (ssr:false
+        // means there is no per-request server render to compute it lazily),
+        // so it must always be an object here. Leaving it unset crashes every
+        // page that destructures `auth` off useAppConfig() -- compute it
+        // leniently from raw env instead of the strict schema, which requires
+        // fields (NUXT_SESSION_PASSWORD, etc.) a CI/Docker build intentionally
+        // doesn't have.
+        nuxt.options.appConfig.auth = {
+          isGithubEnabled: !!(process.env.NUXT_OAUTH_GITHUB_CLIENT_ID && process.env.NUXT_OAUTH_GITHUB_CLIENT_SECRET),
+          isGoogleEnabled: !!(process.env.NUXT_OAUTH_GOOGLE_CLIENT_ID && process.env.NUXT_OAUTH_GOOGLE_CLIENT_SECRET),
+          isEmailEnabled: !!process.env.NUXT_PRIVATE_RESEND_API_KEY,
+        }
         return
       }
       const env = envSchema.parse(process.env)
