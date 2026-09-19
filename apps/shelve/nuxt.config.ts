@@ -6,10 +6,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-01-24',
 
   hub: {
-    db: {
-      dialect: 'postgresql',
-      driver: 'postgres-js',
-    },
+    db: 'postgresql',
   },
 
   ssr: false,
