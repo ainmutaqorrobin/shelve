@@ -69,6 +69,7 @@ jobs:
           build-args: |
             NUXT_PUBLIC_GITHUB_APP_NAME=${{ vars.NUXT_PUBLIC_GITHUB_APP_NAME }}
             DATABASE_URL=postgresql://build:build@localhost:5432/build
+            NUXT_PRIVATE_RESEND_API_KEY=re_build_placeholder
           tags: ${{ steps.meta-app.outputs.tags }}
           labels: ${{ steps.meta-app.outputs.labels }}
           cache-from: type=gha
@@ -83,6 +84,7 @@ jobs:
           platforms: linux/amd64
           build-args: |
             DATABASE_URL=postgresql://build:build@localhost:5432/build
+            NUXT_PRIVATE_RESEND_API_KEY=re_build_placeholder
           tags: ${{ steps.meta-migrate.outputs.tags }}
           labels: ${{ steps.meta-migrate.outputs.labels }}
           cache-from: type=gha

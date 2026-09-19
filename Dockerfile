@@ -36,6 +36,15 @@ ENV NUXT_PUBLIC_GITHUB_APP_NAME=$NUXT_PUBLIC_GITHUB_APP_NAME
 ARG DATABASE_URL="postgresql://build:build@localhost:5432/build"
 ENV DATABASE_URL=$DATABASE_URL
 
+# apps/shelve/modules/auth/index.ts bakes isEmailEnabled (which login.vue uses
+# to decide whether to render the OTP login form at all) into the client
+# bundle at this same BUILD time, based only on whether this var is non-empty
+# -- it never reads the actual key value at build time. This placeholder just
+# needs to exist; the real key (used server-side, at runtime, to actually call
+# Resend) lives only in the VPS's runtime .env, never here.
+ARG NUXT_PRIVATE_RESEND_API_KEY="re_build_placeholder"
+ENV NUXT_PRIVATE_RESEND_API_KEY=$NUXT_PRIVATE_RESEND_API_KEY
+
 COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm run build:app
