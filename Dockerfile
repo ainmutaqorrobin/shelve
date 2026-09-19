@@ -26,6 +26,12 @@ ENV SKIP_ENV_VALIDATION=true
 ARG NUXT_PUBLIC_GITHUB_APP_NAME=""
 ENV NUXT_PUBLIC_GITHUB_APP_NAME=$NUXT_PUBLIC_GITHUB_APP_NAME
 
+# NuxtHub picks its DB driver (postgres-js vs PGlite) by detecting this var at
+# BUILD time, and bakes the choice into .output. It never connects during the
+# build -- this placeholder only steers driver selection toward postgres-js.
+ARG DATABASE_URL="postgresql://build:build@localhost:5432/build"
+ENV DATABASE_URL=$DATABASE_URL
+
 COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm run build:app
