@@ -6,7 +6,15 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-01-24',
 
   hub: {
-    db: 'postgresql',
+    db: {
+      dialect: 'postgresql',
+      // Migrations run separately via the dedicated migrate image
+      // (`docker compose run --rm migrate`), not during the build. Without
+      // this, @nuxthub/core tries to connect to DATABASE_URL and apply
+      // migrations while the image builds -- there is nothing listening on
+      // that placeholder connection in the CI builder container.
+      applyMigrationsDuringBuild: false,
+    },
   },
 
   ssr: false,

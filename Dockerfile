@@ -27,8 +27,12 @@ ARG NUXT_PUBLIC_GITHUB_APP_NAME=""
 ENV NUXT_PUBLIC_GITHUB_APP_NAME=$NUXT_PUBLIC_GITHUB_APP_NAME
 
 # NuxtHub picks its DB driver (postgres-js vs PGlite) by detecting this var at
-# BUILD time, and bakes the choice into .output. It never connects during the
-# build -- this placeholder only steers driver selection toward postgres-js.
+# BUILD time, and bakes the choice into .output. This placeholder steers
+# driver selection toward postgres-js -- it is never a real connection target.
+# apps/shelve/nuxt.config.ts sets applyMigrationsDuringBuild: false, so
+# NuxtHub does NOT attempt to actually connect with it; without that flag it
+# tries to apply migrations against this URL during the build and fails with
+# ECONNREFUSED, since nothing is listening on it in the builder container.
 ARG DATABASE_URL="postgresql://build:build@localhost:5432/build"
 ENV DATABASE_URL=$DATABASE_URL
 
