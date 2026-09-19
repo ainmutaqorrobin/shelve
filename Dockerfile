@@ -26,15 +26,22 @@ ENV SKIP_ENV_VALIDATION=true
 ARG NUXT_PUBLIC_GITHUB_APP_NAME=""
 ENV NUXT_PUBLIC_GITHUB_APP_NAME=$NUXT_PUBLIC_GITHUB_APP_NAME
 
-# NuxtHub picks its DB driver (postgres-js vs PGlite) by detecting this var at
-# BUILD time, and bakes the choice into .output. This placeholder steers
-# driver selection toward postgres-js -- it is never a real connection target.
-# apps/shelve/nuxt.config.ts sets applyMigrationsDuringBuild: false, so
-# NuxtHub does NOT attempt to actually connect with it; without that flag it
-# tries to apply migrations against this URL during the build and fails with
-# ECONNREFUSED, since nothing is listening on it in the builder container.
-ARG DATABASE_URL="postgresql://build:build@localhost:5432/build"
-ENV DATABASE_URL=$DATABASE_URL
+# Tells apps/shelve/nuxt.config.ts to select the postgres-js driver -- do NOT
+# set DATABASE_URL/POSTGRES_URL/POSTGRESQL_URL here to do the same thing.
+# @nuxthub/core bakes a HARD-CODED connection string into the compiled server
+# output whenever one of those vars is non-empty at build time, even a fake
+# placeholder -- it only generates a live `process.env.DATABASE_URL` lookup
+# ("lazy env resolution for Docker/multi-deploy scenarios", per its own
+# source) when that resolved connection.url is empty. A prior version of this
+# file set a placeholder DATABASE_URL and shipped every image with
+# 'postgresql://build:build@localhost:5432/build' hard-coded as the real
+# runtime connection target, permanently unable to reach the actual database
+# no matter what the VPS's real DATABASE_URL was set to. This marker forces
+# driver selection through nuxt.config.ts instead, keeping the actual
+# DATABASE_URL/POSTGRES_URL/POSTGRESQL_URL vars completely unset at build
+# time so the live lookup gets generated.
+ARG NUXT_HUB_DB_DRIVER="postgres-js"
+ENV NUXT_HUB_DB_DRIVER=$NUXT_HUB_DB_DRIVER
 
 # apps/shelve/modules/auth/index.ts bakes isEmailEnabled (which login.vue uses
 # to decide whether to render the OTP login form at all) into the client

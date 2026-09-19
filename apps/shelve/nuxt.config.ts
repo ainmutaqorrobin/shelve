@@ -8,17 +8,25 @@ export default defineNuxtConfig({
   hub: {
     db: {
       dialect: 'postgresql',
-      // Local/test builds (no DATABASE_URL, e.g. e2e tests via
-      // @nuxt/test-utils) use pglite and need this ON -- it's what creates
-      // the schema those tests seed against. The Docker build sets
-      // DATABASE_URL to a placeholder purely to steer driver selection to
-      // postgres-js; nothing is listening on it, so build-time migrations
-      // must be OFF there or the build fails with ECONNREFUSED. Migrations
-      // against the real database run separately, via the dedicated migrate
-      // image (`docker compose run --rm migrate`) at deploy time.
-      applyMigrationsDuringBuild: !(
-        process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRESQL_URL
-      ),
+      // The Docker build passes NUXT_HUB_DB_DRIVER=postgres-js as a pure
+      // marker flag -- it is deliberately NOT a DATABASE_URL/POSTGRES_URL/
+      // POSTGRESQL_URL value. @nuxthub/core hard-codes whatever connection
+      // string is present at build time into the compiled server output; by
+      // selecting the driver here instead of via env-var detection, the real
+      // connection vars stay unset during the build, so @nuxthub/core falls
+      // back to generating a live `process.env.DATABASE_URL` lookup instead
+      // ("lazy env resolution for Docker/multi-deploy scenarios", per its own
+      // source) -- required for one built image to work against whatever
+      // real DATABASE_URL the VPS's compose.yml sets at container start.
+      // Local/test builds (no NUXT_HUB_DB_DRIVER, e.g. e2e tests via
+      // @nuxt/test-utils) leave this undefined and fall through to pglite.
+      driver: process.env.NUXT_HUB_DB_DRIVER === 'postgres-js' ? 'postgres-js' : undefined,
+      // Migrations run separately via the dedicated migrate image
+      // (`docker compose run --rm migrate`) at deploy time, against the
+      // real database -- never during the build, where there is nothing to
+      // connect to. Local/test (pglite) builds still need this ON: it's
+      // what creates the schema @nuxt/test-utils' e2e tests seed against.
+      applyMigrationsDuringBuild: process.env.NUXT_HUB_DB_DRIVER !== 'postgres-js',
     },
   },
 
